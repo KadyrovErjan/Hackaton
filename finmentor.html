@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>FinMentor — Digital Finance Hackathon 2026</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f4f6fb;--card:#fff;--tx:#14192b;--mu:#64708a;--ac:#4f46e5;--ok:#16a34a;--bad:#dc2626;--wa:#d97706;--bd:#e3e8f2}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1220;--card:#171c30;--tx:#eef1fa;--mu:#8f9bb8;--ac:#818cf8;--ok:#4ade80;--bad:#f87171;--wa:#fbbf24;--bd:#262d47}}
+:root[data-theme="dark"]{--bg:#0e1220;--card:#171c30;--tx:#eef1fa;--mu:#8f9bb8;--ac:#818cf8;--ok:#4ade80;--bad:#f87171;--wa:#fbbf24;--bd:#262d47}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.45}
+.w{max-width:960px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:0}h2{font-size:15px;margin:0 0 10px}
+.sub{color:var(--mu);font-size:13px;margin:2px 0 14px}
+.g{display:grid;gap:12px}.g4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px}
+.k{font-size:12px;color:var(--mu)}.v{font-size:22px;font-weight:700}
+input,select,button{font:inherit;padding:9px 10px;border-radius:9px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);min-width:0}
+button{background:var(--ac);color:#fff;border:0;cursor:pointer;font-weight:600}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1 1 110px}
+.bar{height:8px;background:var(--bd);border-radius:6px;overflow:hidden;margin:4px 0 10px}.bar i{display:block;height:100%;background:var(--ac)}
+.tip{padding:9px 11px;border-left:4px solid var(--ac);background:var(--bg);border-radius:8px;margin-bottom:8px;font-size:14px}
+.tip.ok{border-color:var(--ok)}.tip.bad{border-color:var(--bad)}.tip.wa{border-color:var(--wa)}
+.tx{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);font-size:14px}
+.tx button{background:none;color:var(--mu);padding:0 6px;flex:0}
+.sc{font-size:44px;font-weight:800}
+.ov{overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="w">
+<h1>💸 FinMentor</h1>
+<p class="sub">Умный помощник по личным финансам · Digital Finance Hackathon 2026 · валюта: сом (KGS)</p>
+
+<div class="g g4">
+<div class="c"><div class="k">Доходы</div><div class="v" id="inc" style="color:var(--ok)"></div></div>
+<div class="c"><div class="k">Расходы</div><div class="v" id="exp" style="color:var(--bad)"></div></div>
+<div class="c"><div class="k">Баланс</div><div class="v" id="bal"></div></div>
+<div class="c"><div class="k">Финансовое здоровье</div><div class="sc" id="score"></div></div>
+</div>
+
+<div class="g g2" style="margin-top:12px">
+<div class="c"><h2>➕ Новая операция</h2>
+<div class="row"><select id="t"><option value="e">Расход</option><option value="i">Доход</option></select>
+<select id="cat"></select></div>
+<div class="row" style="margin-top:8px"><input id="a" type="number" min="0" placeholder="Сумма"><button id="add">Добавить</button></div>
+<div id="list" style="margin-top:10px;max-height:260px;overflow:auto"></div></div>
+
+<div class="c"><h2>🧠 AI-советник (анализ правил 50/30/20)</h2><div id="tips"></div></div>
+</div>
+
+<div class="g g2" style="margin-top:12px">
+<div class="c"><h2>📊 Расходы по категориям</h2><div id="cats"></div></div>
+<div class="c"><h2>🎯 Цель накопления</h2>
+<div class="row"><input id="gn" placeholder="Цель" value="Ноутбук"><input id="gs" type="number" placeholder="Сумма" value="60000"></div>
+<div class="bar"><i id="gb"></i></div><div id="gt" class="k"></div>
+<h2 style="margin-top:14px">🔮 Что если сократить расходы?</h2>
+<div class="row"><select id="sc"></select><input id="sp" type="range" min="0" max="100" value="20"></div>
+<div id="st" class="tip ok" style="margin-top:8px"></div></div>
+</div>
+<p class="sub" style="margin-top:14px">Демо-данные сохраняются только в вашем браузере. Не является финансовой консультацией.</p>
+</div>
+<script>
+const CATS={e:["Еда","Жильё","Транспорт","Связь","Развлечения","Одежда","Образование","Прочее"],i:["Зарплата","Подработка","Стипендия","Прочее"]};
+const NEEDS=["Еда","Жильё","Транспорт","Связь"],WANTS=["Развлечения","Одежда"];
+let D=[{t:"i",c:"Зарплата",a:55000},{t:"i",c:"Подработка",a:8000},{t:"e",c:"Жильё",a:16000},{t:"e",c:"Еда",a:14000},{t:"e",c:"Транспорт",a:4500},{t:"e",c:"Связь",a:900},{t:"e",c:"Развлечения",a:13000},{t:"e",c:"Одежда",a:6000}];
+try{const s=localStorage.getItem("fm1");if(s)D=JSON.parse(s)}catch(e){}
+const $=id=>document.getElementById(id),f=n=>Math.round(n).toLocaleString("ru-RU")+" с";
+function save(){try{localStorage.setItem("fm1",JSON.stringify(D))}catch(e){}}
+function fillCats(){$("cat").innerHTML=CATS[$("t").value].map(c=>`<option>${c}</option>`).join("")}
+$("t").onchange=fillCats;fillCats();
+$("sc").innerHTML=CATS.e.map(c=>`<option>${c}</option>`).join("");$("sc").value="Развлечения";
+$("add").onclick=()=>{const a=+$("a").value;if(!(a>0))return;D.push({t:$("t").value,c:$("cat").value,a});$("a").value="";save();R()};
+function R(){
+const sum=(p)=>D.filter(x=>x.t==="e"&&p(x)).reduce((s,x)=>s+x.a,0);
+const inc=D.filter(x=>x.t==="i").reduce((s,x)=>s+x.a,0),exp=sum(()=>true),bal=inc-exp;
+$("inc").textContent=f(inc);$("exp").textContent=f(exp);$("bal").textContent=f(bal);$("bal").style.color=bal>=0?"var(--ok)":"var(--bad)";
+const rate=inc?bal/inc:0,score=Math.max(0,Math.min(100,Math.round(50+rate*250)));
+$("score").textContent=score+"/100";$("score").style.color=score>=70?"var(--ok)":score>=40?"var(--wa)":"var(--bad)";
+$("list").innerHTML=D.map((x,i)=>`<div class="tx"><span>${x.t==="i"?"🟢":"🔴"} ${x.c}</span><span>${x.t==="i"?"+":"−"}${f(x.a)}<button onclick="D.splice(${i},1);save();R()">✕</button></span></div>`).reverse().join("");
+const by={};D.filter(x=>x.t==="e").forEach(x=>by[x.c]=(by[x.c]||0)+x.a);
+$("cats").innerHTML=Object.entries(by).sort((a,b)=>b[1]-a[1]).map(([c,v])=>`<div style="display:flex;justify-content:space-between;font-size:14px"><span>${c}</span><span>${f(v)} · ${Math.round(v/exp*100)}%</span></div><div class="bar"><i style="width:${v/exp*100}%"></i></div>`).join("")||'<span class="k">Нет расходов</span>';
+const need=sum(x=>NEEDS.includes(x.c)),want=sum(x=>WANTS.includes(x.c)),T=[];
+const pc=v=>inc?Math.round(v/inc*100):0;
+T.push(need/inc>0.5?["wa",`Обязательные траты — ${pc(need)}% дохода (норма до 50%). Проверьте жильё и транспорт.`]:["ok",`Обязательные траты в норме: ${pc(need)}% (до 50%).`]);
+T.push(want/inc>0.3?["bad",`Желания — ${pc(want)}% дохода (норма до 30%). Сократите развлечения и одежду.`]:["ok",`Желания в норме: ${pc(want)}%.`]);
+T.push(rate<0.2?["wa",`Норма сбережений ${Math.round(rate*100)}% — цель 20%. Не хватает ${f(Math.max(0,inc*0.2-bal))} в месяц.`]:["ok",`Отлично! Вы откладываете ${Math.round(rate*100)}% дохода.`]);
+const top=Object.entries(by).sort((a,b)=>b[1]-a[1])[0];if(top)T.push(["",`Самая крупная категория — «${top[0]}» (${f(top[1])}). Начните оптимизацию с неё.`]);
+T.push(["",`Подушка безопасности: накопите 3 месяца расходов — ${f(exp*3)}.`]);
+$("tips").innerHTML=T.map(t=>`<div class="tip ${t[0]}">${t[1]}</div>`).join("");
+goal(bal);scen(by,bal)}
+function goal(bal){const g=+$("gs").value||0,m=bal>0?Math.ceil(g/bal):null;$("gb").style.width=Math.min(100,Math.max(0,bal/g*100))+"%";
+$("gt").textContent=m?`«${$("gn").value}»: ${f(g)} при текущем балансе ${f(bal)}/мес — примерно ${m} мес.`:"При отрицательном балансе накопить не получится."}
+function scen(by,bal){const p=+$("sp").value,c=$("sc").value,s=(by[c]||0)*p/100,nb=bal+s,g=+$("gs").value||0;
+$("st").textContent=`Сократив «${c}» на ${p}%, вы сэкономите ${f(s)}/мес`+(nb>0?` и достигнете цели за ${Math.ceil(g/nb)} мес.`:".")}
+["gs","gn","sc","sp"].forEach(i=>$(i).oninput=R);
+R();
+</script>
+</body>
+</html>
